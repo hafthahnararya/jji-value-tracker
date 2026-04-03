@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demon Ledger ⚡</title>
+<style>
+:root {
+  --bg:        #07090f;
+  --bg2:       #0c1020;
+  --bg3:       #111828;
+  --bg4:       #162035;
+  --border:    #1e2d4a;
+  --border2:   #2a3f6a;
+  --blue:      #4a9eff;
+  --blue-dim:  #2a5a99;
+  --blue-glow: rgba(74,158,255,0.18);
+  --cyan:      #00d4ff;
+  --cyan-glow: rgba(0,212,255,0.12);
+  --white:     #ddeeff;
+  --dim:       #5a7aaa;
+  --muted:     #2a3a55;
+  --gold:      #e8c040;
+  --red:       #ff4455;
+  --green:     #40e890;
+  --orange:    #ffaa30;
+  --purple:    #c070ff;
+  --infinity:  rgba(74,158,255,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(74,158,255,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 80% at 100% 50%, rgba(0,212,255,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 40% at 0% 100%, rgba(74,158,255,0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    repeating-linear-gradient(60deg, transparent 0px, transparent 34px, rgba(30,45,74,0.22) 35px),
+    repeating-linear-gradient(-60deg, transparent 0px, transparent 34px, rgba(30,45,74,0.22) 35px);
+  pointer-events: none;
+  animation: void-breathe 10s ease-in-out infinite;
+}
+@keyframes void-breathe { 0%,100%{opacity:0.5} 50%{opacity:1} }
+.wrap { position: relative; z-index: 1; max-width: 1020px; margin: 0 auto; padding: 28px 20px 80px; }
+
+/* HEADER */
+header { text-align: center; padding: 32px 0 24px; margin-bottom: 36px; }
+.gojo-eyes { display: flex; justify-content: center; gap: 18px; margin-bottom: 14px; }
+.eye {
+  width: 24px; height: 15px; border-radius: 50%;
+  background: radial-gradient(ellipse at 40% 40%, #fff 0%, var(--cyan) 30%, var(--blue) 60%, #0a1530 100%);
+  box-shadow: 0 0 12px var(--cyan), 0 0 28px rgba(0,212,255,0.4);
+  position: relative;
+  animation: eye-glow 4s ease-in-out infinite;
+}
+.eye::after {
+  content: ''; position: absolute;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #000a1a; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+}
+@keyframes eye-glow { 0%,100%{box-shadow:0 0 12px var(--cyan),0 0 28px rgba(0,212,255,0.4)} 50%{box-shadow:0 0 22px var(--cyan),0 0 55px rgba(0,212,255,0.6)} }
+header h1 {
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-size: clamp(2.2rem, 9vw, 5rem);
+  letter-spacing: 0.1em; line-height: 0.9; color: var(--white);
+  text-shadow: 0 0 40px rgba(74,158,255,0.35), 0 0 80px rgba(74,158,255,0.12);
+  font-weight: 900;
+}
+header h1 em {
+  font-style: normal; color: var(--cyan);
+  text-shadow: 0 0 30px var(--cyan), 0 0 60px rgba(0,212,255,0.35);
+}
+.header-sub { font-size: 0.68rem; letter-spacing: 0.3em; color: var(--dim); margin-top: 10px; text-transform: uppercase; }
+.inf-line { display: flex; align-items: center; gap: 14px; margin: 20px 0; }
+.inf-line::before,.inf-line::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--border2), transparent); }
+.inf-line span { color: var(--blue); font-weight: 700; font-size: 1.1rem; text-shadow: 0 0 10px var(--blue); }
+
+/* RATES */
+.rates { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 32px; }
+.rate-pill {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 2px;
+  padding: 5px 14px; font-size: 0.74rem; color: var(--dim);
+  display: flex; align-items: center; gap: 6px;
+}
+.rate-pill strong { color: var(--white); }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* TABS */
+.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 30px; flex-wrap: wrap; }
+.tab {
+  font-size: 0.76rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); padding: 11px 22px; cursor: pointer; border: none; background: none;
+  border-bottom: 2px solid transparent; transition: all 0.2s;
+}
+.tab:hover { color: var(--dim); }
+.tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.view { display: none; }
+.view.active { display: block; animation: fadein 0.25s ease; }
+@keyframes fadein { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+
+/* SECTION TITLE */
+.section-title {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--blue); margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* GRAND BAR */
+.grand-bar {
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 3px;
+  padding: 22px 28px; display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; position: relative; overflow: hidden;
+}
+.grand-bar::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--cyan), var(--blue), transparent);
+  background-size: 200%; animation: scan 4s linear infinite;
+}
+@keyframes scan { from{background-position:200%} to{background-position:-200%} }
+.grand-bar::after {
+  content: '∞'; position: absolute; right: 90px; top: 50%; transform: translateY(-50%);
+  font-size: 6rem; color: var(--infinity); line-height: 1; pointer-events: none;
+}
+.g-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+.g-sub   { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.g-value { font-family: 'Arial Black', Arial, sans-serif; font-size: 3rem; color: var(--gold); line-height: 1; text-shadow: 0 0 24px rgba(232,192,64,0.3); font-weight: 900; }
+.g-unit  { font-size: 0.68rem; color: var(--dim); letter-spacing: 0.1em; margin-top: 2px; }
+
+/* CARDS */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.acct-card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 3px;
+  padding: 18px 20px; position: relative; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.acct-card:hover { border-color: var(--border2); box-shadow: 0 0 20px var(--cyan-glow); }
+.acct-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+.c-name  { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.04em; color: var(--white); margin-bottom: 4px; text-transform: uppercase; }
+.c-total { font-family: 'Arial Black', Arial, sans-serif; font-size: 1.8rem; color: var(--gold); line-height: 1; margin-bottom: 12px; text-shadow: 0 0 14px rgba(232,192,64,0.22); font-weight: 900; }
+.c-assets { font-size: 0.76rem; line-height: 2.1; }
+.asset-row { display: flex; align-items: center; gap: 6px; }
+.c-slots { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.73rem; color: var(--muted); line-height: 2.1; }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead th { background: var(--bg4); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 10px 12px; text-align: center; border: 1px solid var(--border); white-space: nowrap; }
+tbody td { padding: 9px 12px; border: 1px solid var(--border); text-align: center; background: var(--bg2); transition: background 0.15s; }
+tbody tr:nth-child(even) td { background: var(--bg3); }
+tbody tr:hover td { background: var(--bg4); }
+.td-acc { text-align: left !important; font-weight: 700; color: var(--white); }
+.td-slot { color: var(--dim); font-size: 0.76rem; }
+.td-df  { color: var(--red);    font-weight: 700; }
+.td-pch { color: var(--blue); }
+.td-ens { color: var(--green); }
+.td-ds  { color: var(--orange); }
+.td-ms  { color: var(--purple); }
+.td-tot { color: var(--gold); font-weight: 700; }
+
+/* PANELS */
+.setup-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 28px; margin-bottom: 18px; position: relative; overflow: hidden; }
+.setup-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+label { font-size: 0.7rem; letter-spacing: 0.1em; color: var(--dim); text-transform: uppercase; font-weight: 700; }
+input[type="text"], input[type="number"], select {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 2px;
+  color: var(--white); font-family: Arial, sans-serif; font-size: 0.9rem;
+  padding: 10px 14px; width: 100%; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(74,158,255,0.12); }
+input::placeholder { color: var(--muted); }
+select { appearance: none; cursor: pointer; }
+select option { background: var(--bg3); }
+
+.btn { font-size: 0.76rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 26px; border: none; border-radius: 2px; cursor: pointer; transition: all 0.2s; font-family: Arial, sans-serif; }
+.btn-primary   { background: linear-gradient(135deg, var(--blue-dim), var(--blue)); color: #fff; box-shadow: 0 0 20px rgba(74,158,255,0.22); }
+.btn-primary:hover { box-shadow: 0 0 32px rgba(74,158,255,0.42); transform: translateY(-1px); }
+.btn-secondary { background: transparent; color: var(--dim); border: 1px solid var(--border); margin-left: 10px; }
+.btn-secondary:hover { border-color: var(--border2); color: var(--white); }
+.btn-danger    { background: rgba(255,68,85,0.12); color: var(--red); border: 1px solid rgba(255,68,85,0.3); margin-left: 10px; }
+.btn-danger:hover { background: rgba(255,68,85,0.22); }
+
+.status-badge   { display: inline-flex; align-items: center; gap: 6px; font-size: 0.74rem; padding: 5px 12px; border-radius: 2px; margin-top: 12px; }
+.status-ok      { background: rgba(64,232,144,0.07);  border: 1px solid rgba(64,232,144,0.22);  color: var(--green); }
+.status-err     { background: rgba(255,68,85,0.07);   border: 1px solid rgba(255,68,85,0.22);   color: var(--red); }
+.status-loading { background: rgba(74,158,255,0.07);  border: 1px solid rgba(74,158,255,0.18);  color: var(--blue); }
+
+/* TRADE LOG */
+.trade-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.trade-form .full { grid-column: 1 / -1; }
+.trade-items-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.trade-item-input { display: flex; flex-direction: column; gap: 4px; }
+.trade-item-input label { font-size: 0.65rem; }
+.trade-divider {
+  display: flex; align-items: center; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--cyan); padding: 6px 0;
+}
+.trade-divider::before,.trade-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.trade-divider span { padding: 0 14px; }
+
+.trade-log-entry {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 3px;
+  padding: 14px 18px; margin-bottom: 10px; display: flex; gap: 16px; align-items: flex-start;
+  position: relative; transition: border-color 0.2s;
+}
+.trade-log-entry:hover { border-color: var(--border2); }
+.trade-log-entry::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--blue), var(--cyan));
+  border-radius: 3px 0 0 3px;
+}
+.tl-time    { font-size: 0.68rem; color: var(--muted); white-space: nowrap; min-width: 92px; padding-top: 2px; }
+.tl-body    { flex: 1; }
+.tl-account { font-size: 0.86rem; font-weight: 700; color: var(--white); letter-spacing: 0.04em; margin-bottom: 5px; text-transform: uppercase; }
+.tl-exchange { font-size: 0.79rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tl-gave    { color: var(--red); }
+.tl-got     { color: var(--green); }
+.tl-arrow   { color: var(--dim); }
+.tl-note    { font-size: 0.73rem; color: var(--muted); margin-top: 5px; font-style: italic; }
+.tl-delta   { text-align: right; min-width: 80px; padding-top: 2px; }
+.tl-delta .delta-val   { font-weight: 700; font-size: 1.1rem; }
+.tl-delta .delta-label { font-size: 0.66rem; color: var(--muted); }
+.delta-neg  { color: var(--red); }
+.delta-pos  { color: var(--green); }
+.delta-zero { color: var(--muted); }
+.tl-delete  { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 0.9rem; padding: 2px 6px; border-radius: 2px; transition: color 0.2s; align-self: flex-start; }
+.tl-delete:hover { color: var(--red); }
+
+.trade-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card   { background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; padding: 14px 18px; }
+.stat-label  { font-size: 0.68rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; font-weight: 700; }
+.stat-value  { font-family: 'Arial Black', Arial, sans-serif; font-size: 1.6rem; font-weight: 900; }
+
+/* MISC */
+.last-updated { font-size: 0.69rem; color: var(--muted); text-align: right; margin-bottom: 16px; letter-spacing: 0.05em; }
+.empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+.empty .e-icon { font-size: 2.8rem; margin-bottom: 12px; opacity: 0.3; }
+.empty p { font-size: 0.86rem; line-height: 1.8; }
+.no-trades { text-align: center; padding: 48px 20px; color: var(--muted); }
+.no-trades .nt-icon { font-size: 2.4rem; margin-bottom: 12px; opacity: 0.3; }
+.flash { position: fixed; bottom: 20px; right: 20px; background: var(--bg3); border: 1px solid var(--blue); color: var(--white); padding: 11px 20px; border-radius: 2px; font-size: 0.83rem; z-index: 999; transform: translateY(60px); opacity: 0; transition: all 0.3s; box-shadow: 0 0 20px var(--blue-glow); }
+.flash.show { transform: none; opacity: 1; }
+
+@media (max-width: 680px) {
+  .grand-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .grand-bar::after { display: none; }
+  .g-value { font-size: 2.3rem; }
+  .trade-form { grid-template-columns: 1fr; }
+  .trade-items-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* EDIT ROWS */
+.edit-row-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 3px;
+  padding: 16px 18px; margin-bottom: 12px; position: relative;
+  transition: border-color 0.2s;
+}
+.edit-row-card:hover { border-color: var(--border2); }
+.edit-row-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.edit-row-name { font-weight: 700; font-size: 0.9rem; color: var(--white); text-transform: uppercase; letter-spacing: 0.04em; }
+.edit-row-actions { display: flex; gap: 8px; }
+.edit-row-fields { display: grid; grid-template-columns: 1fr 1fr repeat(5, 1fr); gap: 8px; align-items: end; }
+.edit-field { display: flex; flex-direction: column; gap: 4px; }
+.edit-field label { font-size: 0.63rem; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; font-weight: 700; }
+.btn-save { background: rgba(64,232,144,0.1); color: var(--green); border: 1px solid rgba(64,232,144,0.25); font-size: 0.72rem; padding: 6px 14px; }
+.btn-save:hover { background: rgba(64,232,144,0.2); }
+.btn-del  { background: rgba(255,68,85,0.08); color: var(--red); border: 1px solid rgba(255,68,85,0.22); font-size: 0.72rem; padding: 6px 12px; }
+.btn-del:hover { background: rgba(255,68,85,0.18); }
+@media (max-width: 780px) { .edit-row-fields { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="gojo-eyes"><div class="eye"></div><div class="eye"></div></div>
+    <h1>DEMON <em>LEDGER</em></h1>
+    <div class="header-sub">Cursed Asset Registry — 無下限呪術</div>
+  </header>
+
+  <div class="inf-line"><span>∞</span></div>
+
+  <div class="rates">
+    <div class="rate-pill"><span class="dot" style="background:#ff4455"></span><strong>Demon Finger</strong> = 1 DF</div>
+    <div class="rate-pill"><span class="dot" style="background:#4a9eff"></span><strong>Purified Curse Hand</strong> = 10 DF</div>
+    <div class="rate-pill"><span class="dot" style="background:#40e890"></span><strong>Energy Nature Scroll</strong> = 10 DF</div>
+    <div class="rate-pill"><span class="dot" style="background:#ffaa30"></span><strong>Domain Shard</strong> = 50 DF</div>
+    <div class="rate-pill"><span class="dot" style="background:#c070ff"></span><strong>Maximum Scroll</strong> = 50 DF</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+    <button class="tab" onclick="switchTab('table',this)">Full Table</button>
+    <button class="tab" onclick="switchTab('trades',this)">Trade Log</button>
+    <button class="tab" onclick="switchTab('setup',this)">Setup</button>
+    <button class="tab" onclick="switchTab('edit',this)">✏ Edit Sheet</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="view-overview" class="view active">
+    <div id="ov-content">
+      <div class="empty"><div class="e-icon">👁</div><p>Loading data…</p></div>
+    </div>
+  </div>
+
+  <!-- FULL TABLE -->
+  <div id="view-table" class="view">
+    <div id="tbl-content">
+      <div class="empty"><div class="e-icon">📊</div><p>Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- TRADE LOG -->
+  <div id="view-trades" class="view">
+    <div class="setup-panel" style="margin-bottom:18px">
+      <div class="section-title">Log a Trade</div>
+      <div class="trade-form">
+        <div class="form-group">
+          <label>Account</label>
+          <select id="trade-account">
+            <option value="">— Select account —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date &amp; Time</label>
+          <input type="text" id="trade-time" placeholder="e.g. 2025-01-15 14:30">
+        </div>
+
+        <div class="full">
+          <label style="display:block;margin-bottom:8px;color:var(--red)">GAVE — items sent out</label>
+          <div class="trade-items-grid">
+            <div class="trade-item-input">
+              <label style="color:#ff4455">Demon Fingers</label>
+              <input type="number" id="gave-df" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#4a9eff">Purified Curse Hand</label>
+              <input type="number" id="gave-pch" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#40e890">Energy Nature Scroll</label>
+              <input type="number" id="gave-ens" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#ffaa30">Domain Shard</label>
+              <input type="number" id="gave-ds" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#c070ff">Maximum Scroll</label>
+              <input type="number" id="gave-ms" placeholder="0" min="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="full trade-divider"><span>⇄ FOR ⇄</span></div>
+
+        <div class="full">
+          <label style="display:block;margin-bottom:8px;color:var(--green)">RECEIVED — items gained</label>
+          <div class="trade-items-grid">
+            <div class="trade-item-input">
+              <label style="color:#ff4455">Demon Fingers</label>
+              <input type="number" id="got-df" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#4a9eff">Purified Curse Hand</label>
+              <input type="number" id="got-pch" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#40e890">Energy Nature Scroll</label>
+              <input type="number" id="got-ens" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#ffaa30">Domain Shard</label>
+              <input type="number" id="got-ds" placeholder="0" min="0">
+            </div>
+            <div class="trade-item-input">
+              <label style="color:#c070ff">Maximum Scroll</label>
+              <input type="number" id="got-ms" placeholder="0" min="0">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label>Note (optional)</label>
+          <input type="text" id="trade-note" placeholder="e.g. Traded with GuildMaster, quick swap deal…">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="logTrade()">⚡ Log Trade</button>
+      <button class="btn btn-secondary" onclick="clearTradeForm()">Clear</button>
+    </div>
+
+    <div id="trade-stats-el"></div>
+    <div class="section-title">Trade History</div>
+    <div id="trade-log-el">
+      <div class="no-trades"><div class="nt-icon">⚡</div><p>No trades logged yet.<br>Use the form above to record your first trade.</p></div>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="view-setup" class="view">
+    <div class="setup-panel">
+      <div class="section-title">Data Source</div>
+      <p style="font-size:0.82rem;color:var(--dim);line-height:1.8;margin-bottom:16px">
+        Data is fetched directly from a hardcoded Google Sheet every time you open the page. Use the button below to manually refresh.
+      </p>
+      <div id="load-status"></div>
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="loadSheet()">↻ Refresh Data</button>
+        <button class="btn btn-secondary" id="refresh-btn" onclick="toggleAutoRefresh()">Enable Auto-Refresh</button>
+        <span id="refresh-status" style="font-size:0.74rem;color:var(--muted)"></span>
+      </div>
+    </div>
+    <div class="setup-panel">
+      <div class="section-title">Trade History</div>
+      <p style="font-size:0.82rem;color:var(--dim);line-height:1.8;margin-bottom:14px">
+        Trade log entries are saved in your browser's local storage. This permanently deletes all records.
+      </p>
+      <button class="btn btn-danger" onclick="clearAllTrades()">Clear All Trade History</button>
+    </div>
+  </div>
+
+  <!-- EDIT SHEET -->
+  <div id="view-edit" class="view">
+
+    <!-- ADD NEW ROW -->
+    <div class="setup-panel" style="margin-bottom:18px">
+      <div class="section-title">Add New Row</div>
+      <div class="trade-form">
+        <div class="form-group">
+          <label>Account Name</label>
+          <input type="text" id="add-account" placeholder="e.g. saqueenri">
+        </div>
+        <div class="form-group">
+          <label>Slot</label>
+          <input type="text" id="add-slot" placeholder="e.g. Slot">
+        </div>
+        <div class="full">
+          <div class="trade-items-grid">
+            <div class="trade-item-input"><label style="color:#ff4455">Demon Fingers</label><input type="number" id="add-df" placeholder="0" min="0"></div>
+            <div class="trade-item-input"><label style="color:#4a9eff">Purified Curse Hand</label><input type="number" id="add-pch" placeholder="0" min="0"></div>
+            <div class="trade-item-input"><label style="color:#40e890">Energy Nature Scroll</label><input type="number" id="add-ens" placeholder="0" min="0"></div>
+            <div class="trade-item-input"><label style="color:#ffaa30">Domain Shard</label><input type="number" id="add-ds" placeholder="0" min="0"></div>
+            <div class="trade-item-input"><label style="color:#c070ff">Maximum Scroll</label><input type="number" id="add-ms" placeholder="0" min="0"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="submitAddRow()">＋ Add Row</button>
+    </div>
+
+    <!-- EDITABLE ROWS -->
+    <div class="section-title">Edit Existing Rows</div>
+    <div id="edit-rows-el">
+      <div class="empty"><div class="e-icon">✏</div><p>Load data first.</p></div>
+    </div>
+</div>
+<div class="flash" id="flash-el"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxh93STiJMaofvXHpttcUJS1bWpbnTb7oE56Nq8tt01Cy1vtV2dUDw2Akvj5l7otT48kw/exec";
+const COLORS = {df:'#ff4455', pch:'#4a9eff', ens:'#40e890', ds:'#ffaa30', ms:'#c070ff'};
+const LABELS = {df:'Demon Fingers', pch:'Purified Curse Hand', ens:'Energy Nature Scroll', ds:'Domain Shard', ms:'Maximum Scroll'};
+
+let data = [], autoRefreshTimer = null;
+let trades = JSON.parse(localStorage.getItem('demonTrades') || '[]');
+
+/* ─── INIT ─── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('trade-time').value = nowStr();
+  loadSheet(true);
+  renderTrades();
+});
+
+function nowStr() {
+  const d = new Date();
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+}
+function pad(n) { return n < 10 ? '0'+n : n; }
+
+/* ─── TABS ─── */
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('view-'+tab).classList.add('active');
+}
+
+/* ─── FLASH ─── */
+function flash(msg) {
+  const el = document.getElementById('flash-el');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+function setStatus(html, type) {
+  document.getElementById('load-status').innerHTML =
+    '<div class="status-badge status-'+type+'">'+html+'</div>';
+}
+
+const PROXY = '';
+
+/* ─── FETCH via Apps Script API ─── */
+function loadSheet(silent) {
+  if (!silent) setStatus('Channeling cursed energy…', 'loading');
+  fetch(API_URL + '?action=get')
+    .then(r => r.json())
+    .then(json => {
+      if (json.error) throw new Error(json.error);
+      data = (json.rows || []).map(r => ({
+        rowIndex: r.rowIndex,
+        account:  (r.Account || '').trim(),
+        slot:     (r.Slot    || 'Slot').trim(),
+        df:  parseFloat(r['Demon Fingers'])        || 0,
+        pch: parseFloat(r['Purified Curse Hand'])  || 0,
+        ens: parseFloat(r['Energy Nature Scroll']) || 0,
+        ds:  parseFloat(r['Domain Shard'])         || 0,
+        ms:  parseFloat(r['Maximum Scroll'])       || 0,
+      })).filter(r => r.account);
+      const t = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      setStatus('Loaded ' + data.length + ' entries · ' + t, 'ok');
+      if (!silent) flash('Data refreshed — ' + data.length + ' entries');
+      renderOverview();
+      renderTable();
+      populateAccountDropdown();
+      renderEditTab();
+    })
+    .catch(err => {
+      setStatus('Could not fetch data: ' + err.message, 'err');
+      if (!silent) flash('Error: ' + err.message);
+    });
+}
+
+/* ─── UPDATE ROW via Apps Script API ─── */
+function updateRow(rowIndex, rowData) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'update', rowIndex, rowData }),
+  }).then(r => r.json());
+}
+
+/* ─── ADD ROW via Apps Script API ─── */
+function addRow(rowData) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'add', rowData }),
+  }).then(r => r.json());
+}
+
+/* ─── DELETE ROW via Apps Script API ─── */
+function deleteRow(rowIndex) {
+  return fetch(API_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ action: 'delete', rowIndex }),
+  }).then(r => r.json());
+}
+
+function calcVal(r)     { return r.df + r.pch*10 + r.ens*10 + r.ds*50 + r.ms*50; }
+function calcItems(items) { return (items.df||0) + (items.pch||0)*10 + (items.ens||0)*10 + (items.ds||0)*50 + (items.ms||0)*50; }
+
+/* ─── OVERVIEW ─── */
+function renderOverview() {
+  const el = document.getElementById('ov-content');
+  if (!data.length) { el.innerHTML = emptyHTML('👁','No data loaded.'); return; }
+
+  const tradeAdj = {};
+  trades.forEach(t => { tradeAdj[t.account] = (tradeAdj[t.account]||0) + t.netDelta; });
+
+  const byAcc = {};
+  data.forEach(r => { if (!byAcc[r.account]) byAcc[r.account] = []; byAcc[r.account].push(r); });
+
+  const sheetGrand = data.reduce((s,r) => s + calcVal(r), 0);
+  const tradeTotal = Object.values(tradeAdj).reduce((s,v) => s + v, 0);
+  const grand = sheetGrand + tradeTotal;
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  let html = '<div class="last-updated">Last synced: '+now+'</div>'
+    + '<div class="grand-bar">'
+    + '<div><div class="g-label">Total Cursed Assets</div><div class="g-sub">all accounts · incl. trade adjustments</div></div>'
+    + '<div style="text-align:right"><div class="g-value">'+grand.toLocaleString()+'</div><div class="g-unit">DEMON FINGERS</div></div>'
+    + '</div>'
+    + '<div class="section-title">Account Overview</div>'
+    + '<div class="cards-grid">';
+
+  Object.entries(byAcc).forEach(([acc, rows]) => {
+    const sheetTotal = rows.reduce((s,r) => s + calcVal(r), 0);
+    const adj   = tradeAdj[acc] || 0;
+    const total = sheetTotal + adj;
+    const totals = {df:0, pch:0, ens:0, ds:0, ms:0};
+    rows.forEach(r => Object.keys(totals).forEach(k => totals[k] += r[k]));
+    const assetHtml = Object.entries(totals).filter(([,v]) => v > 0)
+      .map(([k,v]) => '<div class="asset-row"><span class="dot" style="background:'+COLORS[k]+'"></span>'
+        + '<span style="color:'+COLORS[k]+'">'+v+'</span>'
+        + '<span style="color:var(--muted);margin-left:3px">'+LABELS[k]+'</span></div>').join('');
+    const slotHtml = rows.map(r => '<div>'+r.slot+': <span style="color:var(--gold)">'+calcVal(r).toLocaleString()+' DF</span></div>').join('');
+    const adjHtml = adj !== 0
+      ? '<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:0.72rem;">Trade Adj: <span style="color:'+(adj>=0?'var(--green)':'var(--red)')+'">'+(adj>=0?'+':'')+adj.toLocaleString()+' DF</span></div>'
+      : '';
+    html += '<div class="acct-card">'
+      + '<div class="c-name">'+acc+'</div>'
+      + '<div class="c-total">'+total.toLocaleString()+'<span style="font-size:0.68rem;color:var(--dim);margin-left:4px">DF</span></div>'
+      + '<div class="c-assets">'+(assetHtml||'<span style="color:var(--muted)">No assets</span>')+'</div>'
+      + '<div class="c-slots">'+slotHtml+adjHtml+'</div>'
+      + '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ─── TABLE ─── */
+function renderTable() {
+  const el = document.getElementById('tbl-content');
+  if (!data.length) { el.innerHTML = emptyHTML('📊','No data.'); return; }
+  const rows = data.map(r =>
+    '<tr>'
+    + '<td class="td-acc">'+r.account+'</td>'
+    + '<td class="td-slot">'+r.slot+'</td>'
+    + '<td class="td-df">'+r.df+'</td>'
+    + '<td class="td-pch">'+r.pch+'</td>'
+    + '<td class="td-ens">'+r.ens+'</td>'
+    + '<td class="td-ds">'+r.ds+'</td>'
+    + '<td class="td-ms">'+r.ms+'</td>'
+    + '<td class="td-tot">'+calcVal(r).toLocaleString()+'</td>'
+    + '</tr>'
+  ).join('');
+  const grand = data.reduce((s,r) => s + calcVal(r), 0);
+  el.innerHTML = '<div class="table-wrap"><table>'
+    + '<thead><tr>'
+    + '<th style="color:var(--white);text-align:left">Account</th>'
+    + '<th style="color:var(--dim)">Slot</th>'
+    + '<th style="color:#ff4455">Demon Fingers</th>'
+    + '<th style="color:#4a9eff">Purified Curse Hand</th>'
+    + '<th style="color:#40e890">Energy Nature Scroll</th>'
+    + '<th style="color:#ffaa30">Domain Shard</th>'
+    + '<th style="color:#c070ff">Maximum Scroll</th>'
+    + '<th style="color:var(--gold)">Total (DF)</th>'
+    + '</tr></thead>'
+    + '<tbody>'+rows+'</tbody>'
+    + '<tfoot><tr>'
+    + '<td colspan="7" style="text-align:right;padding:10px 12px;background:var(--bg4);font-size:0.7rem;font-weight:700;letter-spacing:0.1em;color:var(--dim);border:1px solid var(--border)">GRAND TOTAL</td>'
+    + '<td class="td-tot" style="background:var(--bg4);border:1px solid var(--border)">'+grand.toLocaleString()+'</td>'
+    + '</tr></tfoot>'
+    + '</table></div>';
+}
+
+function emptyHTML(icon, msg) {
+  return '<div class="empty"><div class="e-icon">'+icon+'</div><p>'+msg+'</p></div>';
+}
+
+/* ─── TRADE LOG ─── */
+function populateAccountDropdown() {
+  const sel = document.getElementById('trade-account');
+  const cur = sel.value;
+  const accounts = [...new Set(data.map(r => r.account))].sort();
+  sel.innerHTML = '<option value="">— Select account —</option>'
+    + accounts.map(a => '<option value="'+a+'"'+(a===cur?' selected':'')+'>'+a+'</option>').join('');
+}
+
+function getItems(prefix) {
+  return {
+    df:  parseInt(document.getElementById(prefix+'-df').value)  || 0,
+    pch: parseInt(document.getElementById(prefix+'-pch').value) || 0,
+    ens: parseInt(document.getElementById(prefix+'-ens').value) || 0,
+    ds:  parseInt(document.getElementById(prefix+'-ds').value)  || 0,
+    ms:  parseInt(document.getElementById(prefix+'-ms').value)  || 0,
+  };
+}
+
+function itemsToText(items) {
+  const parts = [];
+  if (items.df)  parts.push(items.df+'x Demon Finger'+(items.df!==1?'s':''));
+  if (items.pch) parts.push(items.pch+'x Purified Curse Hand'+(items.pch!==1?'s':''));
+  if (items.ens) parts.push(items.ens+'x Energy Nature Scroll'+(items.ens!==1?'s':''));
+  if (items.ds)  parts.push(items.ds+'x Domain Shard'+(items.ds!==1?'s':''));
+  if (items.ms)  parts.push(items.ms+'x Maximum Scroll'+(items.ms!==1?'s':''));
+  return parts.join(', ') || '—';
+}
+
+function logTrade() {
+  const account = document.getElementById('trade-account').value;
+  if (!account) { flash('⚠ Select an account first'); return; }
+  const gave = getItems('gave');
+  const got  = getItems('got');
+  if (!Object.values(gave).some(v=>v>0) && !Object.values(got).some(v=>v>0)) {
+    flash('⚠ Enter at least one item'); return;
+  }
+  const gaveDF   = calcItems(gave);
+  const gotDF    = calcItems(got);
+  const trade = {
+    id: Date.now(),
+    account,
+    time: document.getElementById('trade-time').value.trim() || nowStr(),
+    gave, got, gaveDF, gotDF,
+    netDelta: gotDF - gaveDF,
+    note: document.getElementById('trade-note').value.trim(),
+  };
+  trades.unshift(trade);
+  localStorage.setItem('demonTrades', JSON.stringify(trades));
+  clearTradeForm();
+  flash('⚡ Trade logged for ' + account);
+  renderTrades();
+  renderOverview();
+}
+
+function deleteTrade(id) {
+  trades = trades.filter(t => t.id !== id);
+  localStorage.setItem('demonTrades', JSON.stringify(trades));
+  renderTrades();
+  renderOverview();
+  flash('Trade removed');
+}
+
+function clearAllTrades() {
+  if (!confirm('Delete ALL trade history? This cannot be undone.')) return;
+  trades = [];
+  localStorage.removeItem('demonTrades');
+  renderTrades();
+  renderOverview();
+  flash('Trade history cleared');
+}
+
+function clearTradeForm() {
+  document.getElementById('trade-account').value = '';
+  ['gave-df','gave-pch','gave-ens','gave-ds','gave-ms',
+   'got-df','got-pch','got-ens','got-ds','got-ms']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('trade-note').value = '';
+  document.getElementById('trade-time').value = nowStr();
+}
+
+function renderTrades() {
+  const statsEl = document.getElementById('trade-stats-el');
+  const logEl   = document.getElementById('trade-log-el');
+  if (!trades.length) {
+    statsEl.innerHTML = '';
+    logEl.innerHTML = '<div class="no-trades"><div class="nt-icon">⚡</div><p>No trades logged yet.<br>Use the form above to record your first trade.</p></div>';
+    return;
+  }
+  const netAll    = trades.reduce((s,t) => s+t.netDelta, 0);
+  const totalGave = trades.reduce((s,t) => s+t.gaveDF, 0);
+  const totalGot  = trades.reduce((s,t) => s+t.gotDF, 0);
+
+  statsEl.innerHTML = '<div class="section-title">Trade Summary</div>'
+    + '<div class="trade-stats">'
+    + '<div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value" style="color:var(--cyan)">'+trades.length+'</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Total Gave (DF)</div><div class="stat-value" style="color:var(--red)">'+totalGave.toLocaleString()+'</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Total Received (DF)</div><div class="stat-value" style="color:var(--green)">'+totalGot.toLocaleString()+'</div></div>'
+    + '<div class="stat-card"><div class="stat-label">Net Balance (DF)</div><div class="stat-value '+(netAll>=0?'delta-pos':'delta-neg')+'">'+(netAll>=0?'+':'')+netAll.toLocaleString()+'</div></div>'
+    + '</div>';
+
+  logEl.innerHTML = trades.map(t => {
+    const dc = t.netDelta>0?'delta-pos':t.netDelta<0?'delta-neg':'delta-zero';
+    const ds = t.netDelta>0?'+':'';
+    return '<div class="trade-log-entry">'
+      + '<div class="tl-time">'+t.time+'</div>'
+      + '<div class="tl-body">'
+      + '<div class="tl-account">⚡ '+t.account+'</div>'
+      + '<div class="tl-exchange">'
+      + '<span class="tl-gave">▼ '+itemsToText(t.gave)+'</span>'
+      + '<span class="tl-arrow"> ⇄ </span>'
+      + '<span class="tl-got">▲ '+itemsToText(t.got)+'</span>'
+      + '</div>'
+      + (t.note?'<div class="tl-note">"'+t.note+'"</div>':'')
+      + '</div>'
+      + '<div class="tl-delta"><div class="delta-val '+dc+'">'+ds+t.netDelta.toLocaleString()+'</div><div class="delta-label">DF net</div></div>'
+      + '<button class="tl-delete" onclick="deleteTrade('+t.id+')" title="Remove">✕</button>'
+      + '</div>';
+  }).join('');
+}
+
+/* ─── EDIT TAB ─── */
+function renderEditTab() {
+  const el = document.getElementById('edit-rows-el');
+  if (!data.length) { el.innerHTML = emptyHTML('✏','No data loaded.'); return; }
+  el.innerHTML = data.map((r, i) => `
+    <div class="edit-row-card" id="edit-card-${i}">
+      <div class="edit-row-header">
+        <div class="edit-row-name">Row ${r.rowIndex ?? i+2} — ${r.account} / ${r.slot}</div>
+        <div class="edit-row-actions">
+          <button class="btn btn-save" onclick="saveRow(${i})">💾 Save</button>
+          <button class="btn btn-del"  onclick="confirmDeleteRow(${i})">✕ Delete</button>
+        </div>
+      </div>
+      <div class="edit-row-fields">
+        <div class="edit-field"><label>Account</label><input type="text" id="er-${i}-account" value="${r.account}"></div>
+        <div class="edit-field"><label>Slot</label><input type="text" id="er-${i}-slot" value="${r.slot}"></div>
+        <div class="edit-field"><label style="color:#ff4455">Demon Fingers</label><input type="number" id="er-${i}-df"  value="${r.df}"  min="0"></div>
+        <div class="edit-field"><label style="color:#4a9eff">Purified Curse Hand</label><input type="number" id="er-${i}-pch" value="${r.pch}" min="0"></div>
+        <div class="edit-field"><label style="color:#40e890">Energy Nature Scroll</label><input type="number" id="er-${i}-ens" value="${r.ens}" min="0"></div>
+        <div class="edit-field"><label style="color:#ffaa30">Domain Shard</label><input type="number" id="er-${i}-ds"  value="${r.ds}"  min="0"></div>
+        <div class="edit-field"><label style="color:#c070ff">Maximum Scroll</label><input type="number" id="er-${i}-ms"  value="${r.ms}"  min="0"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getEditVal(i, key) {
+  const el = document.getElementById('er-'+i+'-'+key);
+  return el ? el.value : '';
+}
+
+function saveRow(i) {
+  const r = data[i];
+  const rowData = {
+    'Account':               getEditVal(i,'account'),
+    'Slot':                  getEditVal(i,'slot'),
+    'Demon Fingers':         parseFloat(getEditVal(i,'df'))  || 0,
+    'Purified Curse Hand':   parseFloat(getEditVal(i,'pch')) || 0,
+    'Energy Nature Scroll':  parseFloat(getEditVal(i,'ens')) || 0,
+    'Domain Shard':          parseFloat(getEditVal(i,'ds'))  || 0,
+    'Maximum Scroll':        parseFloat(getEditVal(i,'ms'))  || 0,
+  };
+  flash('Saving…');
+  updateRow(r.rowIndex, rowData)
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      flash('✅ Row saved!');
+      loadSheet(true);
+    })
+    .catch(err => flash('❌ Save failed: ' + err.message));
+}
+
+function confirmDeleteRow(i) {
+  const r = data[i];
+  if (!confirm('Delete row for "' + r.account + ' / ' + r.slot + '"? This cannot be undone.')) return;
+  flash('Deleting…');
+  deleteRow(r.rowIndex)
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      flash('🗑 Row deleted');
+      loadSheet(true);
+    })
+    .catch(err => flash('❌ Delete failed: ' + err.message));
+}
+
+function submitAddRow() {
+  const account = document.getElementById('add-account').value.trim();
+  if (!account) { flash('⚠ Enter an account name'); return; }
+  const rowData = {
+    'Account':              account,
+    'Slot':                 document.getElementById('add-slot').value.trim() || 'Slot',
+    'Demon Fingers':        parseFloat(document.getElementById('add-df').value)  || 0,
+    'Purified Curse Hand':  parseFloat(document.getElementById('add-pch').value) || 0,
+    'Energy Nature Scroll': parseFloat(document.getElementById('add-ens').value) || 0,
+    'Domain Shard':         parseFloat(document.getElementById('add-ds').value)  || 0,
+    'Maximum Scroll':       parseFloat(document.getElementById('add-ms').value)  || 0,
+  };
+  flash('Adding row…');
+  addRow(rowData)
+    .then(res => {
+      if (res.error) throw new Error(res.error);
+      flash('✅ Row added!');
+      ['add-account','add-slot','add-df','add-pch','add-ens','add-ds','add-ms']
+        .forEach(id => { document.getElementById(id).value = ''; });
+      loadSheet(true);
+    })
+    .catch(err => flash('❌ Add failed: ' + err.message));
+}
+
+/* ─── AUTO REFRESH ─── */
+function toggleAutoRefresh() {
+  const btn    = document.getElementById('refresh-btn');
+  const status = document.getElementById('refresh-status');
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer); autoRefreshTimer = null;
+    btn.textContent = 'Enable Auto-Refresh';
+    status.textContent = '';
+    flash('Auto-refresh off');
+  } else {
+    autoRefreshTimer = setInterval(() => loadSheet(true), 3*60*1000);
+    btn.textContent = 'Disable Auto-Refresh';
+    status.textContent = 'Every 3 min';
+    flash('Auto-refresh on');
+  }
+}
+</script>
+</body>
+</html>
